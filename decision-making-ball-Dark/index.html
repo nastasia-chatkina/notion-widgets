@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400&display=swap');
+
+  body {
+    margin: 0;
+    /* Отступ сверху 5px */
+    padding-top: 5px;
+    padding-left: 0;
+    padding-right: 0;
+    
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Выравнивание по верху */
+    justify-content: flex-start; 
+    
+    background-color: transparent;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  /* --- ШАР (ЧЕРНЫЙ) --- */
+  .ball-container {
+    position: relative;
+    
+    /* Умный размер: 320px или меньше, если экран маленький */
+    width: min(320px, 90vw, calc(100vh - 80px));
+    
+    /* Всегда круг */
+    aspect-ratio: 1 / 1;
+    
+    /* Отступ до кнопки 20px */
+    margin-bottom: 20px; 
+    
+    perspective: 1000px;
+    container-type: inline-size;
+  }
+
+  .ball {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    /* Черный градиент для объема (свет падает сверху-слева) */
+    background: radial-gradient(circle at 30% 30%, #444444, #000000 65%);
+    /* Легкая тень снизу для объема */
+    box-shadow: inset -10px -10px 30px rgba(255,255,255,0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* Блик сверху */
+  .ball::after {
+    content: '';
+    position: absolute;
+    top: 15%;
+    left: 20%;
+    width: 25%;
+    height: 15%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.2), rgba(255,255,255,0) 70%);
+    opacity: 0.6;
+    transform: rotate(-45deg);
+  }
+
+  /* Окошко (ТЕМНОЕ, часть шара) */
+  .window-outer {
+    width: 44%; 
+    height: 44%; 
+    border-radius: 50%;
+    background: #111; /* Почти черный */
+    border: 1px solid #333; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 0 15px #000;
+    overflow: hidden;
+  }
+
+  /* Круг с ответом (БЕЛЫЙ) */
+  .answer-circle {
+    width: 78%;
+    height: 78%;
+    border-radius: 50%;
+    background: #ffffff; /* БЕЛЫЙ ФОН */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: scale(0); 
+    opacity: 0;
+    transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.27), opacity 0.8s;
+  }
+
+  /* Текст (ЧЕРНЫЙ, Резиновый размер) */
+  .answer-text {
+    color: #000000; /* ЧЕРНЫЙ ТЕКСТ */
+    font-size: 5cqi; 
+    font-size: clamp(10px, 5%, 16px); 
+    
+    font-weight: 400; 
+    text-align: center;
+    line-height: 1.3; 
+    padding: 5px;
+    white-space: pre-line;
+    text-shadow: none; 
+  }
+
+  /* Анимация тряски */
+  .shaking {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) infinite both;
+  }
+
+  @keyframes shake {
+    10%, 90% { transform: translate3d(-2px, 0, 0) rotate(-1deg); }
+    20%, 80% { transform: translate3d(4px, 0, 0) rotate(2deg); }
+    30%, 50%, 70% { transform: translate3d(-8px, 0, 0) rotate(-3deg); }
+    40%, 60% { transform: translate3d(8px, 0, 0) rotate(3deg); }
+  }
+
+  .ball.revealed .answer-circle {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  /* --- КНОПКА (БЕЛАЯ -> ЧЕРНАЯ) --- */
+  .shake-btn {
+    padding: 12px 40px; 
+    /* По умолчанию: БЕЛАЯ */
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid #000000;
+    
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 400; 
+    cursor: pointer;
+    text-transform: uppercase; 
+    letter-spacing: 1px;
+    transition: all 0.2s ease-in-out;
+    box-shadow: none;
+    flex-shrink: 0;
+  }
+
+  /* Ховер: ЧЕРНАЯ */
+  .shake-btn:hover {
+    background-color: #000000;
+    color: #ffffff;
+  }
+  
+  .shake-btn:disabled {
+    border-color: #ccc;
+    background-color: #fff;
+    opacity: 0.5;
+    color: #ccc;
+    cursor: default;
+  }
+
+</style>
+</head>
+<body>
+
+  <div class="ball-container">
+    <div class="ball" id="magicBall">
+      <div class="window-outer">
+        <div class="answer-circle">
+          <span class="answer-text" id="answer">Готова?</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="shake-btn" id="btn" onclick="shakeBall()">ВЗБОЛТАТЬ</button>
+
+<script>
+  const ball = document.getElementById('magicBall');
+  const answerText = document.getElementById('answer');
+  const btn = document.getElementById('btn');
+
+  const answers = [
+    "Да",
+    "Нет",
+    "Утро вечера\nмудренее",
+    "Вдохни\nвыдохни",
+    "Упрощай",
+    "Убери\nлишнее",
+    "Начни\nс начала",
+    "Нарушай\nправила",
+    "Смени\nракурс",
+    "Выпей\nводы",
+    "Послушай\nтишину",
+    "Ищи\nсуть",
+    "Отложи\nна завтра",
+    "Сделай\nнаоборот",
+    "Доверься\nсебе",
+    "Не\nбойся",
+    "Включи\nмузыку",
+    "Прогуляйся",
+    "Задай\nвопрос",
+    "Отпусти\nситуацию",
+    "Рискуй",
+    "Действуй"
+  ];
+
+  function shakeBall() {
+    btn.disabled = true;
+    ball.classList.remove('revealed');
+    
+    setTimeout(() => {
+      ball.classList.add('shaking');
+    }, 200);
+
+    setTimeout(() => {
+      ball.classList.remove('shaking');
+      const randomAnswer = answers[Math.floor(Math.random() * answers.length)];
+      answerText.innerText = randomAnswer;
+      ball.classList.add('revealed');
+      btn.disabled = false;
+    }, 1000);
+  }
+</script>
+
+</body>
+</html>
