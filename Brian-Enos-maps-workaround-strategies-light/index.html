@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400&display=swap');
+
+  body {
+    margin: 0;
+    /* ИЗМЕНЕНИЕ: Отступ сверху 25px */
+    padding: 25px 20px 20px 20px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* ИЗМЕНЕНИЕ: Выравнивание по верху */
+    justify-content: flex-start;
+    background-color: transparent;
+    font-family: 'Inter', sans-serif;
+    perspective: 1200px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  /* --- КАРТА --- */
+  .card-container {
+    width: 280px;
+    height: 420px;
+    position: relative;
+    /* Отступ снизу до кнопки */
+    margin-bottom: 25px;
+  }
+
+  .card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    border-radius: 30px;
+    box-shadow: none;
+  }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 30px;
+    border: 1px solid #000; 
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* --- РУБАШКА (Pixel Art) --- */
+  .card-front {
+    background-color: #e0e0e0; 
+    transform: rotateY(0deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none; /* Без обводки на рубашке */
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 30px;
+    image-rendering: pixelated;
+  }
+
+  /* --- ЛИЦЕВАЯ СТОРОНА (Текст) --- */
+  .card-back {
+    background-color: #ffffff; 
+    color: #1a1a1a;            
+    border: 1px solid #000;    
+    transform: rotateY(180deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    text-align: center;
+  }
+
+  .prompt-text {
+    font-size: 16px;
+    font-weight: 300;
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+  }
+
+  .card.is-flipped {
+    transform: rotateY(180deg);
+  }
+
+  /* --- УПРАВЛЕНИЕ --- */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Кнопка: Изначально черная */
+  .pull-btn {
+    padding: 12px 40px;
+    background-color: #000000;
+    color: #ffffff;
+    border: 1px solid #000000;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  /* Ховер: Белая */
+  .pull-btn:hover {
+    background-color: #ffffff;
+    color: #000000;
+  }
+  
+  /* --- ОТКЛЮЧЕННАЯ КНОПКА --- */
+  .pull-btn:disabled {
+    opacity: 0.2;            
+    cursor: wait;
+    background-color: #ffffff; 
+    color: #000000;            
+    border: 1px solid #000000; 
+  }
+
+  .timer-bar {
+    width: 0%;
+    height: 2px;
+    background: #000;
+    margin-top: 5px;
+    transition: width 3s linear;
+  }
+  
+  .timer-bar.active {
+    width: 100%;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    color: #888;
+    font-weight: 300;
+  }
+
+</style>
+</head>
+<body>
+
+  <div class="card-container">
+    <div class="card" id="card">
+      <div class="card-face card-front">
+        <canvas id="pixelArtCanvas" width="280" height="420"></canvas>
+      </div>
+      <div class="card-face card-back">
+        <div class="prompt-text" id="prompt"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="pull-btn" id="btn" onclick="pullCard()">Тянуть</button>
+    <div class="timer-bar" id="timer"></div>
+    <div class="subtitle">Выйди из тупика</div>
+  </div>
+
+<script>
+  const card = document.getElementById('card');
+  const promptEl = document.getElementById('prompt');
+  const btn = document.getElementById('btn');
+  const timerBar = document.getElementById('timer');
+  
+  // --- ГЕНЕРАЦИЯ ---
+  function generatePixelArt() {
+    const canvas = document.getElementById('pixelArtCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    ctx.fillStyle = '#e0e0e0';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const pixelSize = 40; 
+    const cols = Math.ceil(canvas.width / pixelSize);
+    const rows = Math.ceil(canvas.height / pixelSize);
+
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        if (Math.random() > 0.6) {
+          const opacity = Math.random() * 0.7;
+          ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+          ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+        }
+      }
+    }
+
+    const accentCount = Math.floor(Math.random() * 3) + 2;
+    for (let i = 0; i < accentCount; i++) {
+        const ax = Math.floor(Math.random() * cols) * pixelSize;
+        const ay = Math.floor(Math.random() * rows) * pixelSize;
+        ctx.fillStyle = '#ffffff'; 
+        ctx.fillRect(ax, ay, pixelSize, pixelSize);
+    }
+  }
+
+  generatePixelArt();
+
+  // --- СПИСОК ФРАЗ ---
+  const strategies = [
+    "Почитай ошибку как скрытое намерение. Возможно, то, что пошло не так, и есть правильный путь.",
+    "Не пытайся построить стену, просто положи один кирпич максимально идеально. Потом следующий.",
+    "Вспомни момент, когда ты чувствовал абсолютное спокойствие. Вернись в это состояние.",
+    "Отбрось все варианты, которые кажутся безопасными. Что остается, если убрать страх провала?",
+    "Посмотри на ситуацию глазами человека, которого ты уважаешь больше всего.",
+    "Иногда лучшее действие — это полное отсутствие действия. Позволь событиям развиваться.",
+    "Ты ищешь сложный ответ на простой вопрос. Решение лежит на поверхности.",
+    "Доверяй своему первому импульсу. Интуиция сработала раньше, чем мозг.",
+    "То, что кажется препятствием, на самом деле является трамплином.",
+    "Не бойся разрушить то, что уже построено. На руинах часто вырастает что-то великое.",
+    "Задай себе вопрос: будет ли это иметь значение через пять лет?",
+    "Двигайся в сторону своего страха. Там находится точка твоего роста.",
+    "Перестань ждать идеального момента. Начинай с тем, что есть.",
+    "Послушай тишину. Самые важные ответы приходят в моменты молчания.",
+    "Все ограничения только в твоей голове. Реальность гораздо пластичнее.",
+    "Сделай это хуже. Перфекционизм — враг завершения.",
+    "Удали всё и начни с конца. Смени перспективу.",
+    "Просто начни. Аппетит приходит во время еды, вдохновение — во время работы.",
+    "Сделай перерыв. Твоему мозгу нужна перезагрузка, а не еще одна чашка кофе.",
+    "Представь, что у тебя неограниченный бюджет. Как бы это выглядело?",
+    "А теперь представь, что бюджета нет совсем. Как решить задачу бесплатно?",
+    "Упрощай. Если это можно убрать без потери смысла — убери.",
+    "Сделай это для себя, а не для критики. Верни радость процесса.",
+    "Дисциплина важнее мотивации. Просто сделай маленький шаг прямо сейчас.",
+    "Завершённое лучше идеального. Выпускай проект в мир.",
+    "Посмотри на свою работу издалека. Детали важны, но общая картина важнее.",
+    "Нарушай правила. Если ты знаешь их, ты имеешь право их игнорировать.",
+    "Спроси: «Зачем?». Повтори этот вопрос пять раз, чтобы найти истинную причину.",
+    "Вернись к бумаге и ручке. Компьютер иногда ограничивает мышление.",
+    "Укради идею, но сделай её своей. Добавь частичку своей души.",
+    "Работай с другой скоростью. Если ты спешил — замедлись. Если медлил — ускорься.",
+    "Преврати свой недостаток в свою фишку.",
+    "Не бойся белого листа. Это пространство для твоих возможностей.",
+    "Сделай это черно-белым. Работает ли идея без цвета?",
+    "Покажи черновик другу. Свежий взгляд увидит то, что замылилось у тебя.",
+    "Выпрями спину. Твоя осанка влияет на твою уверенность.",
+    "Сделай глубокий вдох через нос и медленный выдох через рот.",
+    "Выпей стакан воды. Твоему мозгу нужна энергия.",
+    "Встань и пройдись. Движение тела запускает движение мыслей.",
+    "Посмотри вдаль. Дай глазам отдохнуть от экрана.",
+    "Расслабь плечи. Ты держишь в них слишком много напряжения.",
+    "Улыбнись. Это сигнал мозгу, что всё в порядке.",
+    "Поспи. Иногда решение проблемы приходит во сне.",
+    "Съешь что-нибудь полезное. Ты — это то, чем ты себя питаешь.",
+    "Почувствуй свои стопы на полу. Заземлись.",
+    "Отложи телефон. Цифровой шум мешает слышать себя.",
+    "Поблагодари свое тело за то, что оно позволяет тебе делать.",
+    "Сделай небольшую растяжку. Твои мышцы скажут спасибо.",
+    "Выйди на свежий воздух. Хотя бы на пять минут.",
+    "Послушай стук своего сердца. Это ритм твоей жизни.",
+    "Ты способен на большее, чем думаешь. Поверь в себя.",
+    "Успех — это сумма маленьких усилий, повторяемых изо дня в день.",
+    "Не сравнивай свое начало с чьей-то серединой.",
+    "Ошибки — это доказательство того, что ты пытаешься.",
+    "Будь смелым. Удача любит храбрых.",
+    "Твой потенциал безграничен. Не ставь себе потолок.",
+    "Каждый эксперт когда-то был новичком.",
+    "Сфокусируйся на прогрессе, а не на совершенстве.",
+    "Ты создаешь свое будущее своими действиями сегодня.",
+    "Окружай себя людьми, которые тянут тебя вверх.",
+    "Не бойся просить помощи. Это признак силы, а не слабости.",
+    "Твое время — твой самый ценный ресурс. Трать его мудро.",
+    "Празднуй маленькие победы. Они ведут к большим.",
+    "Будь голодным до знаний. Учись каждый день.",
+    "Сложные дороги часто ведут в самые красивые места.",
+    "Не позволяй шуму чужих мнений заглушить твой внутренний голос.",
+    "Ты уникален. В мире нет никого, кто мог бы сделать это как ты.",
+    "Инвестируй в себя. Это приносит лучшие дивиденды.",
+    "Будь настойчивым. Река пробивает камень не силой, а постоянством.",
+    "Сегодня — отличный день, чтобы начать.",
+    "Будь как вода. Принимай форму сосуда, но сохраняй свою суть.",
+    "После самой темной ночи всегда наступает рассвет.",
+    "Даже ураган имеет тихий центр. Найди спокойствие внутри хаоса.",
+    "Посмотри на небо. Оно напоминает о масштабе вещей.",
+    "Дерево не растет за один день. Дай себе время.",
+    "Пережди бурю. Дождь не может идти вечно.",
+    "Свети, даже если вокруг темно.",
+    "Будь гибким, как ива, чтобы не сломаться под ветром.",
+    "Приливы и отливы неизбежны. Прими цикличность жизни.",
+    "Посей семена сегодня, чтобы собрать урожай завтра.",
+    "Горы стоят неподвижно, облака плывут. Будь устойчивым, но легким.",
+    "Река никогда не течет вспять. Смотри только вперед.",
+    "Цветок не соревнуется с другим цветком. Он просто цветет.",
+    "Зима всегда сменяется весной. Трудности временны.",
+    "Наблюдай за природой, и ты поймешь всё.",
+    "Просто сделай это.",
+    "Сейчас самое время.",
+    "Дыши.",
+    "Люби то, что делаешь.",
+    "Будь здесь и сейчас.",
+    "Отпусти.",
+    "Рискуй.",
+    "Твори.",
+    "Мечтай масштабнее.",
+    "Слушай себя.",
+    "Действуй.",
+    "Не останавливайся.",
+    "Будь добрее.",
+    "Ищи свет.",
+    "Живи.",
+    "Играй.",
+    "Пробуй новое.",
+    "Сомневайся, но делай.",
+    "Всё получится.",
+    "Ты молодец."
+  ];
+
+  function pullCard() {
+    btn.disabled = true;
+    
+    generatePixelArt();
+    
+    const randomStrategy = strategies[Math.floor(Math.random() * strategies.length)];
+    promptEl.innerText = randomStrategy;
+
+    card.classList.add('is-flipped');
+    timerBar.classList.add('active');
+
+    setTimeout(() => {
+      card.classList.remove('is-flipped');
+      
+      timerBar.style.transition = 'none';
+      timerBar.classList.remove('active');
+      
+      setTimeout(() => {
+        timerBar.style.transition = 'width 3s linear'; 
+        btn.disabled = false;
+      }, 600);
+      
+    }, 10000); 
+  }
+</script>
+
+</body>
+</html>
