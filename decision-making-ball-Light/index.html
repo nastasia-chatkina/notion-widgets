@@ -108,12 +108,13 @@
     /* Шрифт = 5% от ширины родителя (шара). Самый надежный способ. */
     font-size: 5cqi; 
     /* Фолбэк для старых браузеров (хотя в Notion работает cqi) */
-    font-size: clamp(10px, 5%, 16px); 
+
+    font-size: clamp(10px, 5cqi, 30px); 
     
     font-weight: 400; 
     text-align: center;
     line-height: 1.3; 
-    padding: 5px;
+    padding: 2px;
     white-space: pre-line;
     text-shadow: none; 
   }
