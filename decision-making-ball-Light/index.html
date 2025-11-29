@@ -7,24 +7,33 @@
 
   body {
     margin: 0;
-    padding: 20px;
-    height: 100vh;
+    /* Отступ сверху 5px */
+    padding: 5px 20px 20px 20px; 
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    /* Выравнивание по верху */
+    justify-content: flex-start; 
     background-color: transparent;
     font-family: 'Inter', sans-serif;
     overflow: hidden;
+    box-sizing: border-box;
   }
 
   /* --- ШАР (БЕЛЫЙ) --- */
   .ball-container {
     position: relative;
-    width: 320px;
-    height: 320px;
-    margin-bottom: 30px;
+    /* Максимальный размер 320px, но сжимается по ширине экрана */
+    width: 100%;
+    max-width: 320px; 
+    /* Гарантирует идеальный круг при любом размере */
+    aspect-ratio: 1 / 1; 
+    /* Отступ до кнопки 20px */
+    margin-bottom: 20px; 
     perspective: 1000px;
+    /* Для того, чтобы шрифт знал размер контейнера */
+    container-type: inline-size;
   }
 
   .ball {
@@ -33,7 +42,6 @@
     border-radius: 50%;
     /* Белый градиент для объема сферы */
     background: radial-gradient(circle at 30% 30%, #ffffff, #f7f7f7 60%, #eaeaea 100%);
-    /* Внутренняя тень для объема, но БЕЗ внешней тени снизу */
     box-shadow: inset -10px -10px 30px rgba(0,0,0,0.05);
     display: flex;
     align-items: center;
@@ -55,28 +63,24 @@
     transform: rotate(-45deg);
   }
 
-  /* Окошко (СВЕТЛО-СЕРОЕ) */
+  /* Окошко (Размеры в процентах для масштабирования) */
   .window-outer {
-    width: 140px;
-    height: 140px;
+    width: 44%;  /* Было 140px от 320px */
+    height: 44%; 
     border-radius: 50%;
-    /* Чуть темнее шара, чтобы выделялось */
     background: #EBEBEB; 
-    /* Тонкая граница в цвет окошка */
     border: 1px solid #D9D9D9; 
     display: flex;
     align-items: center;
     justify-content: center;
-    /* Внутренняя тень для глубины */
     box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
     overflow: hidden;
   }
 
   /* Круг с ответом (ЧЕРНЫЙ) */
-  /* Появляется из серой "жидкости" */
   .answer-circle {
-    width: 110px;
-    height: 110px;
+    width: 78%; /* От размера окошка */
+    height: 78%;
     border-radius: 50%;
     background: #000000; /* ЧЕРНЫЙ */
     display: flex;
@@ -87,10 +91,11 @@
     transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.27), opacity 0.8s;
   }
 
-  /* Текст (БЕЛЫЙ) */
+  /* Текст (БЕЛЫЙ, Резиновый размер) */
   .answer-text {
     color: #ffffff; 
-    font-size: 15px; 
+    /* Шрифт 5% от ширины шара (адаптивный) */
+    font-size: clamp(10px, 5cqi, 16px); 
     font-weight: 400; 
     text-align: center;
     line-height: 1.3; 
@@ -119,11 +124,9 @@
   /* --- КНОПКА (ЧЕРНАЯ -> БЕЛАЯ) --- */
   .shake-btn {
     padding: 12px 40px; 
-    /* По умолчанию: ЧЕРНАЯ */
     background-color: #000000;
     color: #ffffff;
     border: 1px solid #000000;
-    
     border-radius: 30px;
     font-size: 14px;
     font-weight: 400; 
@@ -132,9 +135,9 @@
     letter-spacing: 1px;
     transition: all 0.2s ease-in-out;
     box-shadow: none;
+    flex-shrink: 0; /* Чтобы кнопка не сжималась */
   }
 
-  /* Ховер: БЕЛАЯ */
   .shake-btn:hover {
     background-color: #ffffff;
     color: #000000;
