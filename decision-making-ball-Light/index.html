@@ -8,13 +8,18 @@
   body {
     margin: 0;
     /* Отступ сверху 5px */
-    padding: 5px 20px 20px 20px; 
-    min-height: 100vh;
+    padding-top: 5px;
+    /* Убираем боковые отступы, чтобы шар мог быть широким на узких экранах */
+    padding-left: 0;
+    padding-right: 0;
+    
+    height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* Выравнивание по верху */
+    /* Прижимаем к верху */
     justify-content: flex-start; 
+    
     background-color: transparent;
     font-family: 'Inter', sans-serif;
     overflow: hidden;
@@ -24,23 +29,29 @@
   /* --- ШАР (БЕЛЫЙ) --- */
   .ball-container {
     position: relative;
-    /* Максимальный размер 320px, но сжимается по ширине экрана */
-    width: 100%;
-    max-width: 320px; 
-    /* Гарантирует идеальный круг при любом размере */
-    aspect-ratio: 1 / 1; 
+    
+    /* ГЛАВНАЯ ФОРМУЛА РАЗМЕРА:
+       1. 320px - Желаемый размер.
+       2. 90vw - Чтобы не вылезал по ширине на мобильных (с запасом).
+       3. calc(100vh - 80px) - Чтобы влезал по высоте (Высота экрана минус место под кнопку и отступы).
+       Функция min() выбирает САМОЕ МАЛЕНЬКОЕ из этих значений.
+    */
+    width: min(320px, 90vw, calc(100vh - 80px));
+    
+    /* Делаем его квадратным (круглым) */
+    aspect-ratio: 1 / 1;
+    
     /* Отступ до кнопки 20px */
     margin-bottom: 20px; 
+    
     perspective: 1000px;
-    /* Для того, чтобы шрифт знал размер контейнера */
-    container-type: inline-size;
   }
 
   .ball {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    /* Белый градиент для объема сферы */
+    /* Белый градиент */
     background: radial-gradient(circle at 30% 30%, #ffffff, #f7f7f7 60%, #eaeaea 100%);
     box-shadow: inset -10px -10px 30px rgba(0,0,0,0.05);
     display: flex;
@@ -63,9 +74,9 @@
     transform: rotate(-45deg);
   }
 
-  /* Окошко (Размеры в процентах для масштабирования) */
+  /* Окошко (Размер в % от шара) */
   .window-outer {
-    width: 44%;  /* Было 140px от 320px */
+    width: 44%; 
     height: 44%; 
     border-radius: 50%;
     background: #EBEBEB; 
@@ -79,10 +90,10 @@
 
   /* Круг с ответом (ЧЕРНЫЙ) */
   .answer-circle {
-    width: 78%; /* От размера окошка */
+    width: 78%; 
     height: 78%;
     border-radius: 50%;
-    background: #000000; /* ЧЕРНЫЙ */
+    background: #000000; 
     display: flex;
     align-items: center;
     justify-content: center;
@@ -94,14 +105,22 @@
   /* Текст (БЕЛЫЙ, Резиновый размер) */
   .answer-text {
     color: #ffffff; 
-    /* Шрифт 5% от ширины шара (адаптивный) */
-    font-size: clamp(10px, 5cqi, 16px); 
+    /* Шрифт = 5% от ширины родителя (шара). Самый надежный способ. */
+    font-size: 5cqi; 
+    /* Фолбэк для старых браузеров (хотя в Notion работает cqi) */
+    font-size: clamp(10px, 5%, 16px); 
+    
     font-weight: 400; 
     text-align: center;
     line-height: 1.3; 
     padding: 5px;
     white-space: pre-line;
     text-shadow: none; 
+  }
+  
+  /* Чтобы cqi работал корректно */
+  .ball-container {
+    container-type: inline-size;
   }
 
   /* Анимация тряски */
@@ -121,7 +140,7 @@
     opacity: 1;
   }
 
-  /* --- КНОПКА (ЧЕРНАЯ -> БЕЛАЯ) --- */
+  /* --- КНОПКА --- */
   .shake-btn {
     padding: 12px 40px; 
     background-color: #000000;
@@ -135,7 +154,8 @@
     letter-spacing: 1px;
     transition: all 0.2s ease-in-out;
     box-shadow: none;
-    flex-shrink: 0; /* Чтобы кнопка не сжималась */
+    /* Запрещаем сжатие кнопки */
+    flex-shrink: 0; 
   }
 
   .shake-btn:hover {
