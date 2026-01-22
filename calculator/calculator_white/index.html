@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta charset="UTF-8">
+<title>Калькулятор (White Style)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+
+  /* --- НАСТРОЙКИ СТИЛЯ (БЕЛАЯ ТЕМА) --- */
+  :root {
+    --total-width: 304px;
+    --border-thick: 2px solid #000000;
+    --border-thin: 1px solid #000000;
+    --color-bg: #ffffff;
+    --color-fg: #000000;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    padding-top: 40px;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; 
+    background-color: var(--color-bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--color-fg);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* --- КОНТЕЙНЕР --- */
+  .app-wrapper {
+    width: var(--total-width);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* --- ВЕРХНЯЯ ПАНЕЛЬ (HEADER) --- */
+  .top-panel {
+    width: 100%;
+    /* Толстая рамка сверху, слева, справа */
+    border: var(--border-thick);
+    /* Снизу рамки нет, стыкуется с экраном */
+    border-bottom: none; 
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+  }
+
+  .title {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  /* --- ЭКРАН (DISPLAY) --- */
+  .display-container {
+    width: 100%;
+    height: 80px; /* Фиксированная высота экрана */
+    background-color: #ffffff;
+    
+    /* Рамки экрана */
+    border-left: var(--border-thick);
+    border-right: var(--border-thick);
+    border-top: var(--border-thin);    /* Разделитель с хедером */
+    border-bottom: var(--border-thin); /* Разделитель с кнопками */
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 20px;
+    overflow: hidden;
+  }
+
+  .current {
+    font-size: 40px;
+    font-weight: 300;
+    line-height: 1;
+    white-space: nowrap;
+    color: #000000;
+  }
+
+  /* --- КЛАВИАТУРА (GRID) --- */
+  .keys {
+    width: 100%;
+    display: grid;
+    /* 4 колонки равной ширины */
+    grid-template-columns: repeat(4, 1fr);
+    /* 6 рядов (высота кнопки 50px) */
+    grid-auto-rows: 50px; 
+    
+    /* Толстая рамка вокруг клавиатуры */
+    border-left: var(--border-thick);
+    border-right: var(--border-thick);
+    border-bottom: var(--border-thick);
+  }
+
+  /* --- КНОПКИ --- */
+  button {
+    background-color: #ffffff;
+    color: #000000;
+    border: none; /* Сбрасываем дефолт */
+    
+    /* ВНУТРЕННИЕ РАЗДЕЛИТЕЛИ */
+    /* Каждая кнопка рисует рамку справа и снизу */
+    border-right: var(--border-thin);
+    border-bottom: var(--border-thin);
+
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.1s;
+    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Убираем правую рамку у каждой 4-й кнопки (конец ряда) */
+  button:nth-child(4n) {
+    border-right: none;
+  }
+
+  /* Убираем нижнюю рамку у кнопок последнего ряда (их всего 24, значит с 21 по 24) */
+  button:nth-child(n+21) {
+    border-bottom: none;
+  }
+
+  /* Эффект наведения */
+  button:hover {
+    background-color: #000000;
+    color: #ffffff;
+  }
+
+  button:active {
+    background-color: #333333;
+  }
+
+  /* Особый стиль для операторов (опционально, можно оставить как есть) */
+  .btn-op {
+    font-weight: 300;
+    font-size: 20px;
+  }
+  
+  /* Кнопка равно */
+  .btn-equal {
+    font-weight: 500;
+  }
+
+</style>
+</head>
+<body>
+
+  <div class="app-wrapper">
+    <!-- ВЕРХ -->
+    <div class="top-panel">
+      <div class="title">Калькулятор</div>
+      <div class="title" style="font-size: 10px; opacity: 0.5;">V 1.0</div>
+    </div>
+
+    <!-- ЭКРАН -->
+    <div class="display-container">
+      <div class="current" id="display">0</div>
+    </div>
+    
+    <!-- КНОПКИ -->
+    <div class="keys">
+      <!-- Ряд 1 -->
+      <button onclick="percent()">%</button>
+      <button onclick="clearEntry()">CE</button>
+      <button onclick="clearAll()">C</button>
+      <button onclick="backspace()">⌫</button>
+
+      <!-- Ряд 2 -->
+      <button onclick="inverse()">¹/x</button>
+      <button onclick="square()">x²</button>
+      <button onclick="sqrt()">²√x</button>
+      <button class="btn-op" onclick="appendOperator('/')">÷</button>
+
+      <!-- Ряд 3 -->
+      <button onclick="appendNumber('7')">7</button>
+      <button onclick="appendNumber('8')">8</button>
+      <button onclick="appendNumber('9')">9</button>
+      <button class="btn-op" onclick="appendOperator('*')">×</button>
+
+      <!-- Ряд 4 -->
+      <button onclick="appendNumber('4')">4</button>
+      <button onclick="appendNumber('5')">5</button>
+      <button onclick="appendNumber('6')">6</button>
+      <button class="btn-op" onclick="appendOperator('-')">−</button>
+
+      <!-- Ряд 5 -->
+      <button onclick="appendNumber('1')">1</button>
+      <button onclick="appendNumber('2')">2</button>
+      <button onclick="appendNumber('3')">3</button>
+      <button class="btn-op" onclick="appendOperator('+')">+</button>
+      
+      <!-- Ряд 6 -->
+      <button onclick="toggleSign()">+/−</button> 
+      <button onclick="appendNumber('0')">0</button>
+      <button onclick="appendDot()">,</button>
+      <button class="btn-equal" onclick="calculate()">=</button>
+    </div>
+  </div>
+
+<script>
+  const display = document.getElementById('display');
+  
+  let currentInput = '0';
+  let previousInput = '';
+  let operator = null;
+  let resetScreen = false;
+
+  function updateDisplay() {
+    let text = currentInput.toString().replace('.', ',');
+    
+    // Адаптация шрифта под размер экрана
+    if (text.length > 8) {
+        display.style.fontSize = "28px";
+    } else {
+        display.style.fontSize = "40px";
+    }
+    
+    // Обрезка слишком длинных чисел
+    if (text.length > 10) {
+        if(parseFloat(currentInput) > 9999999999) {
+             text = parseFloat(currentInput).toExponential(4).replace('.', ',');
+        } else {
+             text = text.substring(0, 10);
+        }
+    }
+    display.innerText = text;
+  }
+
+  function appendNumber(number) {
+    if (currentInput === '0' || resetScreen) {
+      currentInput = number;
+      resetScreen = false;
+    } else {
+      currentInput += number;
+    }
+    updateDisplay();
+  }
+
+  function appendDot() {
+    if (resetScreen) {
+        currentInput = '0.';
+        resetScreen = false;
+    } else if (!currentInput.includes('.')) {
+      currentInput += '.';
+    }
+    updateDisplay();
+  }
+
+  function clearAll() {
+    currentInput = '0';
+    previousInput = '';
+    operator = null;
+    updateDisplay();
+  }
+
+  function clearEntry() {
+    currentInput = '0';
+    updateDisplay();
+  }
+
+  function backspace() {
+    if (currentInput.length > 1) {
+        currentInput = currentInput.slice(0, -1);
+    } else {
+        currentInput = '0';
+    }
+    updateDisplay();
+  }
+
+  function appendOperator(op) {
+    if (operator !== null && !resetScreen) calculate();
+    previousInput = currentInput;
+    operator = op;
+    resetScreen = true;
+  }
+
+  function calculate() {
+    if (operator === null || resetScreen) return;
+    
+    let a = parseFloat(previousInput);
+    let b = parseFloat(currentInput);
+    let result = 0;
+
+    switch (operator) {
+      case '+': result = a + b; break;
+      case '-': result = a - b; break;
+      case '*': result = a * b; break;
+      case '/': 
+        if (b === 0) { alert("Ошибка"); clearAll(); return; }
+        result = a / b; 
+        break;
+    }
+
+    // Округление для устранения багов JS с плавающей точкой
+    result = Math.round(result * 100000000) / 100000000;
+    
+    currentInput = result.toString();
+    operator = null;
+    resetScreen = true;
+    updateDisplay();
+  }
+
+  function percent() {
+    let val = parseFloat(currentInput);
+    if (operator !== null) {
+        let base = parseFloat(previousInput);
+        val = (base * val) / 100;
+    } else {
+        val = val / 100;
+    }
+    currentInput = val.toString();
+    updateDisplay();
+  }
+
+  function inverse() { 
+    let val = parseFloat(currentInput);
+    if (val === 0) return;
+    currentInput = (1 / val).toString();
+    resetScreen = true;
+    updateDisplay();
+  }
+
+  function square() {
+    let val = parseFloat(currentInput);
+    currentInput = (val * val).toString();
+    resetScreen = true;
+    updateDisplay();
+  }
+
+  function sqrt() {
+    let val = parseFloat(currentInput);
+    if (val < 0) return;
+    currentInput = Math.sqrt(val).toString();
+    resetScreen = true;
+    updateDisplay();
+  }
+
+  function toggleSign() {
+    let val = parseFloat(currentInput);
+    currentInput = (val * -1).toString();
+    updateDisplay();
+  }
+
+</script>
+
+</body>
+</html>
