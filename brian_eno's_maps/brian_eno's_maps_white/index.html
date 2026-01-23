@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta charset="UTF-8">
+<title>Oblique Strategies (Light)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+
+  /* --- НАСТРОЙКИ СТИЛЯ (LIGHT) --- */
+  :root {
+    --total-width: 304px;
+    --border-thick: 2px solid #000000;
+    --border-thin: 1px solid #000000;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    padding-top: 40px;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    background-color: #ffffff; /* БЕЛЫЙ ФОН */
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    user-select: none;
+    color: #000000; /* ЧЕРНЫЙ ТЕКСТ */
+  }
+
+  /* --- КОНТЕЙНЕР --- */
+  .app-wrapper {
+    width: var(--total-width);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* --- ШАПКА --- */
+  .top-panel {
+    width: 100%;
+    border: var(--border-thick);
+    border-bottom: none;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    color: #000000;
+  }
+
+  .title {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  /* --- ТАЙМЕР --- */
+  .timer-container {
+    width: 100%;
+    height: 6px;
+    background: #ffffff;
+    border-left: var(--border-thick);
+    border-right: var(--border-thick);
+    border-top: var(--border-thin);
+    border-bottom: var(--border-thin);
+    position: relative;
+  }
+
+  .timer-bar {
+    width: 0%;
+    height: 100%;
+    background: #000000; /* ЧЕРНАЯ ПОЛОСКА */
+    transition: none; 
+  }
+
+  .timer-bar.active {
+    width: 100%;
+    transition: width 5s linear; 
+  }
+
+  /* --- ОБЛАСТЬ КАРТЫ --- */
+  .card-viewport {
+    width: 100%;
+    height: 420px;
+    position: relative;
+    perspective: 1000px;
+    border-left: var(--border-thick);
+    border-right: var(--border-thick);
+    background-color: #ffffff; /* БЕЛЫЙ ФОН ВНУТРИ */
+    overflow: hidden;
+  }
+
+  .card {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .card.is-flipped {
+    transform: rotateY(180deg);
+  }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Рубашка (Светлая) */
+  .card-front {
+    background-color: #f0f0f0;
+    transform: rotateY(0deg);
+  }
+
+  canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    image-rendering: pixelated;
+  }
+
+  /* Лицо (Текст - Белый фон, Черный текст) */
+  .card-back {
+    background-color: #ffffff;
+    color: #000000;            
+    transform: rotateY(180deg);
+    padding: 40px;
+    text-align: center;
+  }
+
+  .prompt-text {
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* --- КНОПКА --- */
+  .controls {
+    width: 100%;
+  }
+
+  .main-btn {
+    width: 100%;
+    padding: 24px 0;
+    background-color: #ffffff;
+    color: #000000;
+    border: var(--border-thick);
+    border-top: var(--border-thin); 
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  /* Ховер: Черная кнопка */
+  .main-btn:hover {
+    background-color: #000000;
+    color: #ffffff;
+  }
+
+  .main-btn:disabled {
+    opacity: 1;
+    background-color: #ffffff;
+    color: #999999;
+    cursor: wait;
+  }
+
+</style>
+</head>
+<body>
+
+  <div class="app-wrapper">
+    <div class="top-panel">
+      <div class="title">Стратегии</div>
+      <div class="title" style="font-size: 10px; opacity: 0.5;">Brian Eno</div>
+    </div>
+
+    <div class="timer-container">
+      <div class="timer-bar" id="timer"></div>
+    </div>
+
+    <div class="card-viewport">
+      <div class="card" id="card">
+        <div class="card-face card-front">
+          <canvas id="pixelArtCanvas" width="300" height="420"></canvas>
+        </div>
+        <div class="card-face card-back">
+          <div class="prompt-text" id="prompt">Нажми кнопку</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="main-btn" id="btn" onclick="pullCard()">Тянуть карту</button>
+    </div>
+  </div>
+
+<script>
+  const card = document.getElementById('card');
+  const promptEl = document.getElementById('prompt');
+  const btn = document.getElementById('btn');
+  const timerBar = document.getElementById('timer');
+  const canvas = document.getElementById('pixelArtCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // --- ГЕНЕРАЦИЯ СВЕТЛОГО ПИКСЕЛЬ-АРТА ---
+  function generatePixelArt() {
+    // Белый фон
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const pixelSize = 20;
+    const cols = Math.ceil(canvas.width / pixelSize);
+    const rows = Math.ceil(canvas.height / pixelSize);
+
+    for (let y = 0; y < rows; y++) {
+      for (let x = 0; x < cols; x++) {
+        const chance = Math.random();
+        
+        // Генерируем светло-серые блоки (вместо темных)
+        if (chance > 0.7) {
+          // Оттенки от 220 до 250 (очень светлые)
+          const light = Math.floor(Math.random() * 30 + 220); 
+          ctx.fillStyle = `rgb(${light},${light},${light})`;
+          ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+        } else if (chance > 0.96) {
+          // Редкие черные/темные точки для контраста
+          ctx.fillStyle = '#e0e0e0';
+          ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+        }
+      }
+    }
+  }
+
+  generatePixelArt();
+
+  const strategies = [
+    "Почитай ошибку как скрытое намерение.",
+    "Не пытайся построить стену, просто положи один кирпич идеально.",
+    "Вспомни момент абсолютного спокойствия и вернись туда.",
+    "Что остается делать, если полностью убрать страх провала?",
+    "Посмотри на ситуацию глазами человека, которого уважаешь.",
+    "Иногда лучшее действие — это полное отсутствие действия.",
+    "Решение проблемы часто лежит на самой поверхности.",
+    "Доверяй первому импульсу, интуиция быстрее разума.",
+    "Препятствие — это не стена, а трамплин для прыжка.",
+    "Не бойся разрушить то, что уже построено.",
+    "Спроси себя: будет ли это иметь значение через 5 лет?",
+    "Двигайся в сторону своего страха, там твой рост.",
+    "Начинай прямо сейчас с тем, что у тебя есть.",
+    "Послушай тишину, в ней скрыты самые важные ответы.",
+    "Ограничения существуют только в твоей голове.",
+    "Сделай это хуже, перфекционизм мешает закончить.",
+    "Удали всё лишнее и начни историю с конца.",
+    "Аппетит и вдохновение приходят во время работы.",
+    "Сделай перерыв, твоему мозгу нужна тишина.",
+    "Представь, что у тебя неограниченный бюджет и время.",
+    "Представь, что бюджета нет совсем, ищи бесплатный путь.",
+    "Упрощай до тех пор, пока не останется только суть.",
+    "Сделай это для себя, забыв о критике других.",
+    "Дисциплина сегодня важнее, чем мотивация завтра.",
+    "Завершённое дело всегда лучше идеального плана.",
+    "Нарушай правила, если ты знаешь, зачем они созданы.",
+    "Вернись к бумаге и ручке, отключи экраны.",
+    "Укради идею художника, но сделай её своей.",
+    "Работай с другой скоростью: замедлись или ускорься.",
+    "Преврати свой главный недостаток в свою уникальную фишку.",
+    "Не бойся белого листа, это пространство возможностей.",
+    "Сделай это черно-белым, убери лишний шум цвета.",
+    "Покажи черновик другу, свежий взгляд увидит больше.",
+    "Выпрями спину, осанка меняет твое мышление.",
+    "Сделай глубокий вдох и медленный выдох.",
+    "Встань и пройдись, движение тела запускает мысли.",
+    "Посмотри вдаль, дай глазам отдохнуть от фокуса.",
+    "Улыбнись, это простой сигнал мозгу, что всё хорошо.",
+    "Поспи, иногда лучшие решения приходят во сне.",
+    "Отложи телефон и побудь в реальном мире.",
+    "Ты способен на большее, чем привык о себе думать.",
+    "Не сравнивай свое начало с чьей-то серединой.",
+    "Будь смелым, только смелым покоряются моря.",
+    "Фокусируйся на прогрессе, а не на совершенстве.",
+    "Сегодня отличный день, чтобы начать что-то новое.",
+    "Будь как вода: принимай форму, но сохраняй суть.",
+    "После самой темной ночи всегда наступает рассвет.",
+    "Найди спокойствие внутри хаоса, стань центром бури.",
+    "Дыши глубже, кислород проясняет сознание.",
+    "Просто сделай это, не ожидая знака свыше."
+  ];
+
+  function pullCard() {
+    btn.disabled = true;
+    btn.innerText = "Осознание...";
+    
+    generatePixelArt();
+    
+    const randomStrategy = strategies[Math.floor(Math.random() * strategies.length)];
+    promptEl.innerText = randomStrategy;
+
+    timerBar.classList.remove('active');
+    void timerBar.offsetWidth;
+
+    card.classList.add('is-flipped');
+    timerBar.classList.add('active');
+
+    setTimeout(() => {
+      card.classList.remove('is-flipped');
+      timerBar.classList.remove('active');
+      
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerText = "Тянуть карту";
+      }, 800);
+      
+    }, 5000); 
+  }
+</script>
+
+</body>
+</html>
